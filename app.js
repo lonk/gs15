@@ -1,5 +1,5 @@
-import BigNumber from 'bignumber.js';
-import inquirer  from 'inquirer';
+import bigInt   from 'big-integer';
+import inquirer from 'inquirer';
 
 inquirer.prompt([
     {
