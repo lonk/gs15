@@ -1,5 +1,5 @@
-import bigInt   from 'big-integer';
 import inquirer from 'inquirer';
+import { vces } from './vces.js';
 
 inquirer.prompt([
     {
@@ -41,7 +41,7 @@ inquirer.prompt([
 ]).then(answers => {
     switch(answers.algo) {
         case 1:
-            console.log('VCES');
+            console.log(vces());
             break;
         default:
             console.log('Algorithme indisponible')
