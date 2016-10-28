@@ -7,7 +7,8 @@
     "start": "babel app.js --presets es2015 --out-file build/app.js && node build/app.js"
   },
   "dependencies": {
-    "bignumber.js": "^2.4.0"
+    "bignumber.js": "^2.4.0",
+    "inquirer": "^1.2.2"
   },
   "devDependencies": {
     "babel-cli": "^6.0.0",
