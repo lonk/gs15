@@ -229,9 +229,7 @@ function generateKeys(keys28, keys) {
 
 // Chiffrement DES
 function des(text, key) {
-    //const binaryKey = stringToBinary(key);
-    const binaryKey = '0001001100110100010101110111100110011011101111001101111111110001';
-    console.log(`initial key: ${binaryKey}`);
+    const binaryKey = stringToBinary(key);
 
     if (binaryKey.length != 64) {
         return {
@@ -240,9 +238,7 @@ function des(text, key) {
         };
     }
 
-    //const initialBinary = stringToBinary(text);
-    const initialBinary = '0000000100100011010001010110011110001001101010111100110111101111';
-    console.log(`initial bin: ${initialBinary}`);
+    const initialBinary = stringToBinary(text);
     const blocks        = divideInBlocks(initialBinary, 64);
 
     const modifiedBlocks = blocks.map(block => {
@@ -259,7 +255,7 @@ function des(text, key) {
         const R      = [ dividedBlock[1] ];
 
         const finalBlocks = feistel(L, R, keys);
-        const finalBlock  = finalBlocks[0][16] + finalBlocks[1][16];
+        const finalBlock  = finalBlocks[1][16] + finalBlocks[0][16];
         const result      = permute(finalBlock, FP);
         return result;
     });
