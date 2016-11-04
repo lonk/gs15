@@ -256,7 +256,7 @@ function des(text, key) {
         const R      = [ dividedBlock[1] ];
 
         const finalBlocks = feistel(L, R, keys);
-        const finalBlock  = finalBlocks[0][15] + finalBlocks[1][15];
+        const finalBlock  = finalBlocks[0][16] + finalBlocks[1][16];
         const result      = permute(finalBlock, FP);
         return result;
     });
