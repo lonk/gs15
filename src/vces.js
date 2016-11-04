@@ -212,12 +212,13 @@ function generateKeys(keys28, keys) {
         shiftN = 1;
     }
 
-    const leftKey  = leftShift(keys28[0], shiftN);
-    const rightKey = leftShift(keys28[1], shiftN);
+    const leftKey  = leftShift(keys28[step - 1][0], shiftN);
+    const rightKey = leftShift(keys28[step - 1][1], shiftN);
     const rKey     = leftKey + rightKey;
     const key      = permute(rKey, PC2);
 
     keys.push(key);
+    keys28.push([leftKey, rightKey]);
 
     if (step < 16) {
         return generateKeys(keys28, keys);
@@ -228,8 +229,9 @@ function generateKeys(keys28, keys) {
 
 // Chiffrement DES
 function des(text, key) {
-    const binaryKey = stringToBinary(key);
-    console.log(binaryKey);
+    //const binaryKey = stringToBinary(key);
+    const binaryKey = '0001001100110100010101110111100110011011101111001101111111110001';
+    console.log(`initial key: ${binaryKey}`);
 
     if (binaryKey.length != 64) {
         return {
@@ -238,8 +240,9 @@ function des(text, key) {
         };
     }
 
-    const initialBinary = stringToBinary(text);
-    console.log(initialBinary);
+    //const initialBinary = stringToBinary(text);
+    const initialBinary = '0000000100100011010001010110011110001001101010111100110111101111';
+    console.log(`initial bin: ${initialBinary}`);
     const blocks        = divideInBlocks(initialBinary, 64);
 
     const modifiedBlocks = blocks.map(block => {
@@ -248,7 +251,7 @@ function des(text, key) {
 
         // Génération des 16 clés Ki
         const key56  = permute(binaryKey, PC1);
-        const keys28 = divideInBlocks(key56, 28);
+        const keys28 = [ divideInBlocks(key56, 28) ];
         const keys   = generateKeys(keys28, []);
 
         // 16 tournées de Feistel
