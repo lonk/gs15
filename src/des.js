@@ -211,21 +211,6 @@ function feistel(L, R, K) {
     return [L, R];
 }
 
- // Récursions inverse sur les tournées de feistel
-function unFeistel(L, R, K) {
-    const step = L.length;
-
-    R[step] = L[step - 1];
-
-    const tempL = feistelFunction(L[step - 1], K[step - 1]);
-    L[step] = binaryXOR(R[step - 1], tempL);
-
-    if (step < 16) {
-        return unFeistel(L, R, K);
-    }
-    return [L, R];
-}
-
 // Génération des 16 clés
 function generateKeys(keys28, keys) {
     const step = keys.length + 1;
@@ -277,8 +262,8 @@ export function des(text, key, type) {
         }
 
         // 16 tournées de Feistel
-        const L      = [ dividedBlock[0] ];
-        const R      = [ dividedBlock[1] ];
+        const L = [ dividedBlock[0] ];
+        const R = [ dividedBlock[1] ];
 
         const finalBlocks = feistel(L, R, keys);
         const finalBlock  = finalBlocks[1][16] + finalBlocks[0][16];
