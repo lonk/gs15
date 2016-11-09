@@ -1,5 +1,5 @@
 import inquirer from 'inquirer';
-import { vces } from './vces.js';
+import { vces } from './vces';
 
 inquirer.prompt([
     {
