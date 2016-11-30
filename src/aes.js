@@ -42,12 +42,7 @@ function multiplyRjindael(polyA, polyB) {
 
     revertedR = revertedR.slice(0, 8);
 
-    revertedR = revertedR.map(x => {
-        if (x % 2 == 0) {
-            return 0;
-        }
-        return 1;
-    });
+    revertedR = revertedR.map(x => x % 2);
 
     return revertedR.reverse();
 }
