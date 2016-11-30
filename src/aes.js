@@ -4,6 +4,25 @@ import {
     binaryToString
 } from './utils';
 
+// Matrice A de SubBytes
+const A  = [1, 0, 0, 0, 1, 1, 1, 1,
+            1, 1, 0, 0, 0, 1, 1, 1,
+            1, 1, 1, 0, 0, 0, 1, 1,
+            1, 1, 1, 1, 0, 0, 0, 1,
+            1, 1, 1, 1, 1, 0, 0, 0,
+            0, 1, 1, 1, 1, 1, 0, 0,
+            0, 0, 1, 1, 1, 1, 1, 0,
+            0, 0, 0, 1, 1, 1, 1, 1];
+
+// Dimension de A
+const lengthA = 8;
+
+// Vecteur C de SubBytes
+const c = [1, 1, 0, 0, 0, 1, 1, 0];
+
+// Génération des vecteurs du corps de Galois
+const gf256 = generationRjindael();
+
 // Retourne le degré d'un polynome
 function degree(poly) {
     let degree = -1;
@@ -64,16 +83,36 @@ function generationRjindael() {
     const generator = table[2];
 
     // Il y a 255 éléments non nuls dans la table. On en connaît déjà 2, il faut trouver les 253 autres
-    for (let i = 2; i < 255; i++) {
+    for (let i = 2; i < 256; i++) {
         table.push(multiplyRjindael(table[i], generator));
     }
+
+    table = table.map(vector => vector.join(''));
 
     return table;
 }
 
-export function aes(text, key) {
-    const gf256 = generationRjindael();
+function subBytes(vector) {
+    const decimalValue    = gf256.indexOf(vector) - 1; // -1 car on a l'élément nul dans le tableau
+    const reversedDecimal = 255 - decimalValue;
+    const reversedVector  = gf256[reversedDecimal + 1].split(''); // +1 car on a l'élément nul dans le tableau
+    let result            = [];
 
+    let line = 0;
+    for (let i = 0; i < 64; i += 8) {
+        line         = Math.floor(i/8);
+        result[line] = 0;
+        for (let j = i; j < i + 8; j++) {
+            result[line] += A[j] * parseInt(reversedVector[j%8]);
+        }
+    }
+
+    result = result.map((byte, index) => ((byte + c[index]) % 2));
+
+    return result.reverse().join('');
+}
+
+export function aes(text, key) {
     const binaryKey = stringToBinary(key);
 
     if (binaryKey.length != 128) {
@@ -86,10 +125,12 @@ export function aes(text, key) {
     const initialBinary = stringToBinary(text);
     const blocks        = divideInBlocks(initialBinary, 128);
 
-    const modifiedBlocks = blocks.map(block => {
-        const matrix = divideInBlocks(block, 8);
+    const expandedKey   = keyExpansion(binaryKey);
 
-        console.log(matrix);
+    const modifiedBlocks = blocks.map(block => {
+        const state = divideInBlocks(block, 8);
+
+        //console.log(state);
     });
 
     return true;

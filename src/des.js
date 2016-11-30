@@ -203,18 +203,18 @@ export function des(text, key, type) {
     const initialBinary = stringToBinary(text);
     const blocks        = divideInBlocks(initialBinary, 64);
 
+    // Génération des 16 clés Ki
+    const key56  = permute(binaryKey, PC1);
+    const keys28 = [ divideInBlocks(key56, 28) ];
+    let keys     = generateKeys(keys28, []);
+
+    if (type == 'uncrypt') {
+       keys = keys.reverse();
+    }
+
     const modifiedBlocks = blocks.map(block => {
         const permutedBinary = permute(block, IP);
         const dividedBlock   = divideInBlocks(permutedBinary, 32);
-
-        // Génération des 16 clés Ki
-        const key56  = permute(binaryKey, PC1);
-        const keys28 = [ divideInBlocks(key56, 28) ];
-        let keys     = generateKeys(keys28, []);
-
-        if (type == 'uncrypt') {
-           keys = keys.reverse();
-        }
 
         // 16 tournées de Feistel
         const L = [ dividedBlock[0] ];

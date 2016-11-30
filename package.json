@@ -4,7 +4,8 @@
   "author": "Lucas Soulier <lucas.soulier@utt.fr>",
   "private": true,
   "scripts": {
-    "start": "babel src --presets es2015 --out-dir build && node build/app.js"
+    "start": "babel src --presets es2015 --out-dir build && node build/app.js",
+    "aes": "babel src --presets es2015 --out-dir build && node build/aes.js"
   },
   "dependencies": {
     "big-integer": "^1.6.16",
