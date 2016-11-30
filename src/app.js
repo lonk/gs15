@@ -44,6 +44,6 @@ inquirer.prompt([
             console.log(vces());
             break;
         default:
-            console.log('Algorithme indisponible')
+            console.log('Algorithme indisponible');
     }
 });

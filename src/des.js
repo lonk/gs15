@@ -1,3 +1,9 @@
+import {
+    divideInBlocks,
+    stringToBinary,
+    binaryToString
+} from './utils';
+
 // Table de permutation initiale
 const IP = [58, 50, 42, 34, 26, 18, 10, 2,
             60, 52, 44, 36, 28, 20, 12, 4,
@@ -91,57 +97,6 @@ const FP = [40, 8, 48, 16, 56, 24, 64, 32,
             35, 3, 43, 11, 51, 19, 59, 27,
             34, 2, 42, 10, 50, 18, 58, 26,
             33, 1, 41, 9, 49, 17, 57, 25];
-
-
-// Converti une chaine de caractère en binaire
-function stringToBinary(text) {
-    const buffer = new Buffer(text, 'binary');
-    let binary   = '';
-
-    buffer.forEach(decimal => {
-        const bits = decimal.toString(2);
-        binary += '00000000'.substr(bits.length)+bits;
-    });
-
-    return binary;
-}
-
-// Converti un binaire en chaine de caractères
-function binaryToString(binary) {
-    let chars = divideInBlocks(binary, 8);
-    chars = chars.map(char => {
-        return String.fromCharCode(parseInt(char, 2));
-    });
-
-    return chars.join('');
-}
-
-// Divise une chaine de caractères en blocks de n caractères
-function divideInBlocks(text, size) {
-    const arrayText = text.split('');
-    const blocks    = [];
-
-    let i     = 0;
-    let index = 0;
-    for (const value of arrayText) {
-        index = Math.floor(i/size);
-        if (!blocks[index]) {
-            blocks[index] = '';
-        }
-
-        blocks[index] += value;
-        i++;
-    }
-
-    if (blocks[index].length < size) {
-        const saveLength = blocks[index].length;
-        for (let j = 0; j < (size - saveLength); j++) {
-            blocks[index] += '0';
-        }
-    }
-
-    return blocks;
-}
 
 // Permute (en étendant, ou raccourcissant si besoin) une chaine de caractère selon une table d'expansion
 function permute(input, table) {

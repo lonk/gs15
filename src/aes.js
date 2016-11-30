@@ -1,3 +1,9 @@
+import {
+    divideInBlocks,
+    stringToBinary,
+    binaryToString
+} from './utils';
+
 // Retourne le degré d'un polynome
 function degree(poly) {
     let degree = -1;
@@ -65,6 +71,26 @@ function generationRjindael() {
     return table;
 }
 
-const gf256 = generationRjindael();
+export function aes(text, key) {
+    const gf256 = generationRjindael();
 
-console.log(gf256);
+    const binaryKey = stringToBinary(key);
+
+    if (binaryKey.length != 128) {
+        return {
+            type: 'error',
+            data: 'The key must be 128-bits long'
+        };
+    }
+
+    const initialBinary = stringToBinary(text);
+    const blocks        = divideInBlocks(initialBinary, 128);
+
+    const modifiedBlocks = blocks.map(block => {
+        const matrix = divideInBlocks(block, 8);
+
+        console.log(matrix);
+    });
+
+    return true;
+}
