@@ -14,9 +14,6 @@ const A  = [1, 0, 0, 0, 1, 1, 1, 1,
             0, 0, 1, 1, 1, 1, 1, 0,
             0, 0, 0, 1, 1, 1, 1, 1];
 
-// Dimension de A
-const lengthA = 8;
-
 // Vecteur C de SubBytes
 const c = [1, 1, 0, 0, 0, 1, 1, 0];
 
@@ -75,15 +72,14 @@ function multiplyRjindael(polyA, polyB) {
 // Génère la table de Rjindael
 function generationRjindael() {
     let table = [
-        [0, 0, 0, 0, 0, 0, 0, 0], // élément nul
         [0, 0, 0, 0, 0, 0, 0, 1], // polynome générateur à la puissance 0
         [0, 0, 0, 0, 0, 0, 1, 1]  // polynome générateur
     ];
 
-    const generator = table[2];
+    const generator = table[1];
 
     // Il y a 255 éléments non nuls dans la table. On en connaît déjà 2, il faut trouver les 253 autres
-    for (let i = 2; i < 256; i++) {
+    for (let i = 1; i < 255; i++) {
         table.push(multiplyRjindael(table[i], generator));
     }
 
@@ -93,10 +89,15 @@ function generationRjindael() {
 }
 
 function subBytes(vector) {
-    const decimalValue    = gf256.indexOf(vector) - 1; // -1 car on a l'élément nul dans le tableau
-    const reversedDecimal = 255 - decimalValue;
-    const reversedVector  = gf256[reversedDecimal + 1].split(''); // +1 car on a l'élément nul dans le tableau
-    let result            = [];
+    const decimalValue = gf256.indexOf(vector);
+    let reversedVector = '00000000'.split('');
+    if (vector !== '00000000') {
+        const reversedDecimal = 255 - decimalValue;
+        // Reverse absent du cours, mais nécessaire pour obtenir la bonne S-box
+        reversedVector        = gf256[reversedDecimal].split('').reverse();
+    }
+
+    let result = [];
 
     let line = 0;
     for (let i = 0; i < 64; i += 8) {
@@ -125,13 +126,14 @@ export function aes(text, key) {
     const initialBinary = stringToBinary(text);
     const blocks        = divideInBlocks(initialBinary, 128);
 
-    const expandedKey   = keyExpansion(binaryKey);
+    // const expandedKey   = keyExpansion(binaryKey);
 
     const modifiedBlocks = blocks.map(block => {
-        const state = divideInBlocks(block, 8);
-
-        //console.log(state);
+        let state = divideInBlocks(block, 8);
+        state = state.map(byte => subBytes(byte));
     });
 
     return true;
 }
+
+//aes('Sbcdabcdabcdabcd', '0123012301230123');
