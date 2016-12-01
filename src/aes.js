@@ -88,7 +88,7 @@ function generationRjindael() {
     return table;
 }
 
-function subBytes(vector) {
+function subByte(vector) {
     const decimalValue = gf256.indexOf(vector);
     let reversedVector = '00000000'.split('');
     if (vector !== '00000000') {
@@ -113,6 +113,31 @@ function subBytes(vector) {
     return result.reverse().join('');
 }
 
+function subBytes(state) {
+    return state.map(byte => subByte(byte));
+}
+
+// Décale un tableau de n positions vers la gauche
+function leftShiftArray(input, n) {
+    if (n == 0) {
+        return input;
+    }
+
+    input.push(input.shift());
+    n -= 1;
+
+    return leftShiftArray(input, n);
+}
+
+function shiftRows(state) {
+    let stateCopy = state.slice(0, 4);
+    stateCopy     = stateCopy.concat(leftShiftArray(state.slice(4, 8), 1));
+    stateCopy     = stateCopy.concat(leftShiftArray(state.slice(8, 12), 2));
+    stateCopy     = stateCopy.concat(leftShiftArray(state.slice(12, 16), 3));
+
+    return stateCopy;
+}
+
 export function aes(text, key) {
     const binaryKey = stringToBinary(key);
 
@@ -130,10 +155,11 @@ export function aes(text, key) {
 
     const modifiedBlocks = blocks.map(block => {
         let state = divideInBlocks(block, 8);
-        state = state.map(byte => subBytes(byte));
+        state = subBytes(state);
+        state = shiftRows(state);
     });
 
     return true;
 }
 
-//aes('Sbcdabcdabcdabcd', '0123012301230123');
+aes('Sbcdabcdabcdabcd', '0123012301230123');
