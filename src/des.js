@@ -1,7 +1,8 @@
 import {
     divideInBlocks,
     stringToBinary,
-    binaryToString
+    binaryToString,
+    binaryXOR
 } from './utils';
 
 // Table de permutation initiale
@@ -118,16 +119,6 @@ function leftShift(input, n) {
     n -= 1;
 
     return leftShift(inputArray.join(''), n);
-}
-
-// Effectue un XOR sur une série de bits
-function binaryXOR(x, y) {
-   const yArray = y.split('');
-
-    return x
-       .split('')
-       .map((value, index) => value ^ yArray[index])
-       .join('');
 }
 
 // Transforme un block en sa valeur dans la S-box correspondante

@@ -1,7 +1,8 @@
 import {
     divideInBlocks,
     stringToBinary,
-    binaryToString
+    binaryToString,
+    binaryXOR
 } from './utils';
 
 // Matrice A de SubBytes
@@ -16,6 +17,13 @@ const A  = [1, 0, 0, 0, 1, 1, 1, 1,
 
 // Vecteur C de SubBytes
 const c = [1, 1, 0, 0, 0, 1, 1, 0];
+
+// Matrice de la transformation MixColumns, convertie en binaire
+const M =  [2, 3, 1, 1,
+            1, 2, 3, 1,
+            1, 1, 2, 3,
+            3, 1, 1, 2]
+            .map(byte => byte.toString(2));
 
 // Génération des vecteurs du corps de Galois
 const gf256 = generationRjindael();
@@ -138,6 +146,33 @@ function shiftRows(state) {
     return stateCopy;
 }
 
+function mixColumn(column) {
+    let result = [];
+    let line   = 0;
+
+    for (let i = 0; i < 16; i += 4) {
+        line         = Math.floor(i/4);
+        result[line] = '00000000';
+        for (let j = i; j < i + 4; j++) {
+            result[line] = binaryXOR(result[line], multiplyRjindael(column[j%4].split(''), M[j].split('')).join(''));
+        }
+    }
+
+    return result;
+}
+
+function mixColumns(state) {
+    const a = mixColumn([state[0], state[4], state[8], state[12]]);
+    const b = mixColumn([state[1], state[5], state[9], state[13]]);
+    const c = mixColumn([state[2], state[6], state[10], state[14]]);
+    const d = mixColumn([state[3], state[7], state[11], state[15]]);
+
+    return [a[0], b[0], c[0], d[0],
+            a[1], b[1], c[1], d[1],
+            a[2], b[2], c[2], d[2],
+            a[3], b[3], c[3], d[3]];
+}
+
 export function aes(text, key) {
     const binaryKey = stringToBinary(key);
 
@@ -157,6 +192,9 @@ export function aes(text, key) {
         let state = divideInBlocks(block, 8);
         state = subBytes(state);
         state = shiftRows(state);
+        state = mixColumns(state);
+
+        console.log(state);
     });
 
     return true;

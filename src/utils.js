@@ -47,3 +47,13 @@ export function divideInBlocks(text, size) {
 
     return blocks;
 }
+
+// Effectue un XOR sur une série de bits
+export function binaryXOR(x, y) {
+   const yArray = y.split('');
+
+    return x
+       .split('')
+       .map((value, index) => value ^ yArray[index])
+       .join('');
+}
