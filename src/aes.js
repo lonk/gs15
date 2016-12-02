@@ -26,7 +26,10 @@ const M =  [2, 3, 1, 1,
             .map(byte => byte.toString(2));
 
 // Génération des vecteurs du corps de Galois
-const gf256 = generationRjindael();
+const gf256 = generationRijndael();
+
+// Génération de la table RCON
+const rcon = generationRcon();
 
 // Retourne le degré d'un polynome
 function degree(poly) {
@@ -43,8 +46,8 @@ function degree(poly) {
     return degree;
 }
 
-// Retourne le produit de deux polynomes dans Rjindael
-function multiplyRjindael(polyA, polyB) {
+// Retourne le produit de deux polynomes dans Rijndael
+function multiplyRijndael(polyA, polyB) {
     const degreeA = degree(polyA);
     const degreeB = degree(polyB);
 
@@ -77,8 +80,8 @@ function multiplyRjindael(polyA, polyB) {
     return revertedR.reverse();
 }
 
-// Génère la table de Rjindael
-function generationRjindael() {
+// Génère la table de Rijndael
+function generationRijndael() {
     let table = [
         [0, 0, 0, 0, 0, 0, 0, 1], // polynome générateur à la puissance 0
         [0, 0, 0, 0, 0, 0, 1, 1]  // polynome générateur
@@ -88,7 +91,23 @@ function generationRjindael() {
 
     // Il y a 255 éléments non nuls dans la table. On en connaît déjà 2, il faut trouver les 253 autres
     for (let i = 1; i < 255; i++) {
-        table.push(multiplyRjindael(table[i], generator));
+        table.push(multiplyRijndael(table[i], generator));
+    }
+
+    table = table.map(vector => vector.join(''));
+
+    return table;
+}
+
+function generationRcon() {
+    let table = [
+        [1, 0, 0, 0, 1, 1, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 1, 0]
+    ];
+
+    for (let i = 3; i < 256; i++) {
+        table.push(multiplyRijndael(table[i - 1], table[2]));
     }
 
     table = table.map(vector => vector.join(''));
@@ -154,7 +173,7 @@ function mixColumn(column) {
         line         = Math.floor(i/4);
         result[line] = '00000000';
         for (let j = i; j < i + 4; j++) {
-            result[line] = binaryXOR(result[line], multiplyRjindael(column[j%4].split(''), M[j].split('')).join(''));
+            result[line] = binaryXOR(result[line], multiplyRijndael(column[j%4].split(''), M[j].split('')).join(''));
         }
     }
 
