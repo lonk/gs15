@@ -106,6 +106,7 @@ function generationRcon() {
         [0, 0, 0, 0, 0, 0, 1, 0]
     ];
 
+    // Seules les 10 premières valeurs sont utilisées pour AES-128, mais la taille réelle de la table est de 256
     for (let i = 3; i < 256; i++) {
         table.push(multiplyRijndael(table[i - 1], table[2]));
     }
@@ -192,6 +193,34 @@ function mixColumns(state) {
             a[3], b[3], c[3], d[3]];
 }
 
+function keyExpansion(key) {
+    let keyArray    = divideInBlocks(key, 32);
+    let extendedKey = keyArray;
+    console.log(extendedKey);
+    let i           = 1;
+
+    while (extendedKey.length * 4 < 176) {
+        let t;
+
+        if ((extendedKey.length * 4) % 16 === 0) {
+            let bytes = divideInBlocks(extendedKey.slice(-1).pop(), 8);
+            bytes     = leftShiftArray(bytes, 1);
+            bytes     = subBytes(bytes);
+            bytes[0]  = binaryXOR(bytes[0], rcon[i]);
+            t         = bytes.join('');
+            i++;
+        }
+
+        for (let j = 0; j < 4; j++) {
+            const pos = extendedKey.length - 4;
+            t = binaryXOR(extendedKey[pos], t);
+            extendedKey.push(t);
+        }
+    }
+
+    return divideInBlocks(extendedKey.join(''), 8).map(b => parseInt(b, 2).toString(16)).join(' ');
+}
+
 export function aes(text, key) {
     const binaryKey = stringToBinary(key);
 
@@ -205,7 +234,7 @@ export function aes(text, key) {
     const initialBinary = stringToBinary(text);
     const blocks        = divideInBlocks(initialBinary, 128);
 
-    // const expandedKey   = keyExpansion(binaryKey);
+    const expandedKey   = keyExpansion(binaryKey);
 
     const modifiedBlocks = blocks.map(block => {
         let state = divideInBlocks(block, 8);
