@@ -158,10 +158,12 @@ function leftShiftArray(input, n) {
 }
 
 function shiftRows(state) {
-    let stateCopy = state.slice(0, 4);
-    stateCopy     = stateCopy.concat(leftShiftArray(state.slice(4, 8), 1));
-    stateCopy     = stateCopy.concat(leftShiftArray(state.slice(8, 12), 2));
-    stateCopy     = stateCopy.concat(leftShiftArray(state.slice(12, 16), 3));
+    let stateCopy = [];
+    for (let i = 0; i < state.length; i++) {
+        let step = Math.floor(i / 4);
+
+        stateCopy.push(state[((i % 4)*5 + step*4) % 16]);
+    }
 
     return stateCopy;
 }
@@ -182,21 +184,17 @@ function mixColumn(column) {
 }
 
 function mixColumns(state) {
-    const a = mixColumn([state[0], state[4], state[8], state[12]]);
-    const b = mixColumn([state[1], state[5], state[9], state[13]]);
-    const c = mixColumn([state[2], state[6], state[10], state[14]]);
-    const d = mixColumn([state[3], state[7], state[11], state[15]]);
+    const a = mixColumn(state.slice(0, 4));
+    const b = mixColumn(state.slice(4, 8));
+    const c = mixColumn(state.slice(8, 12));
+    const d = mixColumn(state.slice(12, 16));
 
-    return [a[0], b[0], c[0], d[0],
-            a[1], b[1], c[1], d[1],
-            a[2], b[2], c[2], d[2],
-            a[3], b[3], c[3], d[3]];
+    return a.concat(b, c, d);
 }
 
 function keyExpansion(key) {
     let keyArray    = divideInBlocks(key, 32);
     let extendedKey = keyArray;
-    console.log(extendedKey);
     let i           = 1;
 
     while (extendedKey.length * 4 < 176) {
@@ -218,8 +216,24 @@ function keyExpansion(key) {
         }
     }
 
-    return divideInBlocks(extendedKey.join(''), 8).map(b => parseInt(b, 2).toString(16)).join(' ');
+    return extendedKey.join('');
 }
+
+function addRoundKey(state, roundKey) {
+    return divideInBlocks(binaryXOR(state.join(''), roundKey), 8);
+}
+
+/*  Dev functions
+
+function toHex(binary) {
+    return divideInBlocks(binary, 8).map(b => parseInt(b, 2).toString(16)).join(' ');
+}
+
+function printHexMatrix(state) {
+    for (let i = 0; i < 4; i++) {
+        console.log(toHex(`${state[i]}${state[4 + i]}${state[8 + i]}${state[12 + i]}`));
+    }
+}*/
 
 export function aes(text, key) {
     const binaryKey = stringToBinary(key);
@@ -234,18 +248,28 @@ export function aes(text, key) {
     const initialBinary = stringToBinary(text);
     const blocks        = divideInBlocks(initialBinary, 128);
 
-    const expandedKey   = keyExpansion(binaryKey);
+    const extendedKey   = keyExpansion(binaryKey);
+    const dividedKey    = divideInBlocks(extendedKey, 128);
 
     const modifiedBlocks = blocks.map(block => {
         let state = divideInBlocks(block, 8);
-        state = subBytes(state);
-        state = shiftRows(state);
-        state = mixColumns(state);
+        state     = addRoundKey(state, dividedKey[0]);
+        for (let i = 1; i <= 10; i++) {
+            state = subBytes(state);
+            state = shiftRows(state);
+            if (i < 10) {
+                state = mixColumns(state);
+            }
+            state = addRoundKey(state, dividedKey[i]);
+        }
 
-        console.log(state);
+        return state.join('');
     });
 
-    return true;
+    return {
+        type: 'result',
+        data: binaryToString(modifiedBlocks.join(''))
+    };
 }
 
-aes('Sbcdabcdabcdabcd', '0123012301230123');
+console.log(aes('Sbcdabcdabcdabcd', '0123012301230123'));
