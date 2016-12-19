@@ -6,7 +6,7 @@ import {
 } from './utils';
 
 // Matrice A de SubBytes
-const A  = [1, 0, 0, 0, 1, 1, 1, 1,
+const A  =  [1, 0, 0, 0, 1, 1, 1, 1,
             1, 1, 0, 0, 0, 1, 1, 1,
             1, 1, 1, 0, 0, 0, 1, 1,
             1, 1, 1, 1, 0, 0, 0, 1,
@@ -15,15 +15,35 @@ const A  = [1, 0, 0, 0, 1, 1, 1, 1,
             0, 0, 1, 1, 1, 1, 1, 0,
             0, 0, 0, 1, 1, 1, 1, 1];
 
+// Matrice A de InvSubBytes
+const invA =    [0, 0, 1, 0, 0, 1, 0, 1,
+                1, 0, 0, 1, 0, 0, 1, 0,
+                0, 1, 0, 0, 1, 0, 0, 1,
+                1, 0, 1, 0, 0, 1, 0, 0,
+                0, 1, 0, 1, 0, 0, 1, 0,
+                0, 0, 1, 0, 1, 0, 0, 1,
+                1, 0, 0, 1, 0, 1, 0, 0,
+                0, 1, 0, 0, 1, 0, 1, 0];
+
 // Vecteur C de SubBytes
 const c = [1, 1, 0, 0, 0, 1, 1, 0];
 
+// Vecteur C de InvSubBytes
+const invc = [1, 0, 1, 0, 0, 0, 0, 0];
+
 // Matrice de la transformation MixColumns, convertie en binaire
-const M =  [2, 3, 1, 1,
-            1, 2, 3, 1,
-            1, 1, 2, 3,
-            3, 1, 1, 2]
-            .map(byte => byte.toString(2));
+const cryM =    [2, 3, 1, 1,
+                1, 2, 3, 1,
+                1, 1, 2, 3,
+                3, 1, 1, 2]
+                .map(byte => '0000'+byte.toString(2));
+
+// Matrice de la transformation InvMixColumns, convertie en binaire
+const invM =    [14, 11, 13, 9,
+                9, 14, 11, 13,
+                13, 9, 14, 11,
+                11, 13, 9, 14]
+                .map(byte => '0000'+byte.toString(2));
 
 // Génération des vecteurs du corps de Galois
 const gf256 = generationRijndael();
@@ -54,7 +74,7 @@ function multiplyRijndael(polyA, polyB) {
     const revertedA = JSON.parse(JSON.stringify(polyA)).reverse();
     const revertedB = JSON.parse(JSON.stringify(polyB)).reverse();
 
-    let revertedR = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let revertedR = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     for (let iA = 0; iA <= degreeA; iA++) {
         if (revertedA[iA] > 0) {
@@ -66,18 +86,22 @@ function multiplyRijndael(polyA, polyB) {
         }
     }
 
-    if (revertedR[8] == 1) { // L'opération de modulo est équivalente à remplacer X^8 par X^4 + X^3 + X + 1
-        revertedR[4] += 1;
-        revertedR[3] += 1;
-        revertedR[1] += 1;
-        revertedR[0] += 1;
-    }
-
-    revertedR = revertedR.slice(0, 8);
-
     revertedR = revertedR.map(x => x % 2);
 
-    return revertedR.reverse();
+    // L'opération de modulo est équivalente à remplacer X^8 par X^4 + X^3 + X + 1, X^9 par X^5 + X^4 + X^2 + X, etc...
+    for (let i = revertedR.length - 1; i >= 8; i--) {
+        if (revertedR[i] == 1) {
+            revertedR[i - 4] += 1;
+            revertedR[i - 5] += 1;
+            revertedR[i - 7] += 1;
+            revertedR[i - 8] += 1;
+            revertedR         = revertedR.map(x => x % 2);
+        }
+    }
+
+    revertedR = revertedR.slice(0, 8).reverse();
+
+    return revertedR;
 }
 
 // Génère la table de Rijndael
@@ -141,8 +165,33 @@ function subByte(vector) {
     return result.reverse().join('');
 }
 
+function invSubByte(vector) {
+    let splitedVector = vector.split('').reverse();
+    let result        = [];
+
+    let line = 0;
+    for (let i = 0; i < 64; i += 8) {
+        line         = Math.floor(i/8);
+        result[line] = 0;
+        for (let j = i; j < i + 8; j++) {
+            result[line] += invA[j] * parseInt(splitedVector[j%8]);
+        }
+    }
+
+    result = result.map((byte, index) => ((byte + invc[index]) % 2)).reverse().join('');
+
+    const reversedDecimal = 255 - gf256.indexOf(result);
+    let reversedVector    = gf256[reversedDecimal].split('');
+
+    return reversedVector.join('');
+}
+
 function subBytes(state) {
     return state.map(byte => subByte(byte));
+}
+
+function invSubBytes(state) {
+    return state.map(byte => invSubByte(byte));
 }
 
 // Décale un tableau de n positions vers la gauche
@@ -162,13 +211,26 @@ function shiftRows(state) {
     for (let i = 0; i < state.length; i++) {
         let step = Math.floor(i / 4);
 
-        stateCopy.push(state[((i % 4)*5 + step*4) % 16]);
+        stateCopy.push(state[((i % 4) * 5 + step * 4) % 16]);
     }
 
     return stateCopy;
 }
 
-function mixColumn(column) {
+function invShiftRows(state) {
+    let stateCopy = [];
+
+    for (let i = state.length - 1; i >= 0; i--) {
+        let step = Math.floor(i / 4);
+
+        stateCopy.push(state[(23 + (3 * (i % 4)) - (step + 1) * 4) % 16]);
+    }
+
+    return stateCopy;
+}
+
+
+function mixColumn(column, M) {
     let result = [];
     let line   = 0;
 
@@ -183,11 +245,11 @@ function mixColumn(column) {
     return result;
 }
 
-function mixColumns(state) {
-    const a = mixColumn(state.slice(0, 4));
-    const b = mixColumn(state.slice(4, 8));
-    const c = mixColumn(state.slice(8, 12));
-    const d = mixColumn(state.slice(12, 16));
+function mixColumns(state, M) {
+    const a = mixColumn(state.slice(0, 4), M);
+    const b = mixColumn(state.slice(4, 8), M);
+    const c = mixColumn(state.slice(8, 12), M);
+    const d = mixColumn(state.slice(12, 16), M);
 
     return a.concat(b, c, d);
 }
@@ -223,8 +285,6 @@ function addRoundKey(state, roundKey) {
     return divideInBlocks(binaryXOR(state.join(''), roundKey), 8);
 }
 
-/*  Dev functions
-
 function toHex(binary) {
     return divideInBlocks(binary, 8).map(b => parseInt(b, 2).toString(16)).join(' ');
 }
@@ -233,11 +293,11 @@ function printHexMatrix(state) {
     for (let i = 0; i < 4; i++) {
         console.log(toHex(`${state[i]}${state[4 + i]}${state[8 + i]}${state[12 + i]}`));
     }
-}*/
+}
 
-export function aes(text, key) {
-    const binaryKey = stringToBinary(key);
-
+export function aes(text, key, type) {
+    //const binaryKey = stringToBinary(key);
+    const binaryKey = '00001111000101010111000111001001010001111101100111101000010110010000110010110111101011011101011010101111011111110110011110011000';
     if (binaryKey.length != 128) {
         return {
             type: 'error',
@@ -253,14 +313,35 @@ export function aes(text, key) {
 
     const modifiedBlocks = blocks.map(block => {
         let state = divideInBlocks(block, 8);
-        state     = addRoundKey(state, dividedKey[0]);
-        for (let i = 1; i <= 10; i++) {
-            state = subBytes(state);
-            state = shiftRows(state);
-            if (i < 10) {
-                state = mixColumns(state);
+
+        if (type == 'uncrypt') {
+            state = addRoundKey(state, dividedKey[10]);
+            for (let i = 9; i >= 0; i--) {
+                //console.log('Round '+i);
+                //printHexMatrix(state);
+                state = invShiftRows(state);
+                //console.log('After InvShiftRows');
+                //printHexMatrix(state);
+                state = invSubBytes(state);
+                //console.log('After InvSubBytes');
+                //printHexMatrix(state);
+                state = addRoundKey(state, dividedKey[i]);
+                //console.log('After addRoundKey');
+                //printHexMatrix(state);
+                if (i > 0) {
+                    state = mixColumns(state, invM);
+                }
             }
-            state = addRoundKey(state, dividedKey[i]);
+        } else {
+            state = addRoundKey(state, dividedKey[0]);
+            for (let i = 1; i <= 10; i++) {
+                state = subBytes(state);
+                state = shiftRows(state);
+                if (i < 10) {
+                    state = mixColumns(state, cryM);
+                }
+                state = addRoundKey(state, dividedKey[i]);
+            }
         }
 
         return state.join('');
@@ -272,4 +353,5 @@ export function aes(text, key) {
     };
 }
 
-console.log(aes('Sbcdabcdabcdabcd', '0123012301230123'));
+console.log(aes(aes('Sbcdabcdabcdabcd', '0123012301230123', 'crypt').data, '0123012301230123', 'uncrypt'));
+
