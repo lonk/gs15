@@ -179,11 +179,13 @@ function invSubByte(vector) {
     }
 
     result = result.map((byte, index) => ((byte + invc[index]) % 2)).reverse().join('');
+    let reversedVector = '00000000';
+    if (result !== '00000000') {
+        const reversedDecimal = 255 - gf256.indexOf(result);
+        reversedVector    = gf256[reversedDecimal];
+    }
 
-    const reversedDecimal = 255 - gf256.indexOf(result);
-    let reversedVector    = gf256[reversedDecimal].split('');
-
-    return reversedVector.join('');
+    return reversedVector;
 }
 
 function subBytes(state) {
@@ -296,8 +298,8 @@ function printHexMatrix(state) {
 }
 
 export function aes(text, key, type) {
-    //const binaryKey = stringToBinary(key);
-    const binaryKey = '00001111000101010111000111001001010001111101100111101000010110010000110010110111101011011101011010101111011111110110011110011000';
+    const binaryKey = stringToBinary(key);
+    //const binaryKey = '00001111000101010111000111001001010001111101100111101000010110010000110010110111101011011101011010101111011111110110011110011000';
     if (binaryKey.length != 128) {
         return {
             type: 'error',
