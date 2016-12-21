@@ -218,7 +218,7 @@ export function des(text, key, type) {
         const L = dividedBlock[0];
         const R = dividedBlock[1];
 
-        const finalBlock  = feistel(L, R, keys, 16);
+        const finalBlock  = feistel([ L ], [ R ], keys, 16);
         const result      = permute(finalBlock, FP);
         return result;
     });
