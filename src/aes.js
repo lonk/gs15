@@ -123,6 +123,7 @@ function generationRijndael() {
     return table;
 }
 
+// Génère la table RCON nécessaire à la génération des clés
 function generationRcon() {
     let table = [
         [1, 0, 0, 0, 1, 1, 0, 1],
@@ -140,6 +141,7 @@ function generationRcon() {
     return table;
 }
 
+// Primitive SubByte appliquée à un vecteur
 function subByte(vector) {
     const decimalValue = gf256.indexOf(vector);
     let reversedVector = '00000000'.split('');
@@ -165,6 +167,7 @@ function subByte(vector) {
     return result.reverse().join('');
 }
 
+// Primitive InvSubByte appliquée à un vecteur
 function invSubByte(vector) {
     let splitedVector = vector.split('').reverse();
     let result        = [];
@@ -188,10 +191,12 @@ function invSubByte(vector) {
     return reversedVector;
 }
 
+// Primitive SubBytes appliquée à un state
 function subBytes(state) {
     return state.map(byte => subByte(byte));
 }
 
+// Primitive InvSubBytes appliquée à un state
 function invSubBytes(state) {
     return state.map(byte => invSubByte(byte));
 }
@@ -208,6 +213,7 @@ function leftShiftArray(input, n) {
     return leftShiftArray(input, n);
 }
 
+// Primitive ShiftRows appliquée à un state
 function shiftRows(state) {
     let stateCopy = [];
     for (let i = 0; i < state.length; i++) {
@@ -219,6 +225,7 @@ function shiftRows(state) {
     return stateCopy;
 }
 
+// Primitive InvShiftRows appliquée à un state
 function invShiftRows(state) {
     let stateCopy = [];
 
@@ -231,7 +238,7 @@ function invShiftRows(state) {
     return stateCopy;
 }
 
-
+// Primitive MixColumn appliquée à un vecteur (colonne)
 function mixColumn(column, M) {
     let result = [];
     let line   = 0;
@@ -247,6 +254,7 @@ function mixColumn(column, M) {
     return result;
 }
 
+// Primitive MixColumn appliquée à une state
 function mixColumns(state, M) {
     const a = mixColumn(state.slice(0, 4), M);
     const b = mixColumn(state.slice(4, 8), M);
@@ -256,6 +264,7 @@ function mixColumns(state, M) {
     return a.concat(b, c, d);
 }
 
+// Algorithme d'extension de la clé
 function keyExpansion(key) {
     let keyArray    = divideInBlocks(key, 32);
     let extendedKey = keyArray;
@@ -283,23 +292,26 @@ function keyExpansion(key) {
     return extendedKey.join('');
 }
 
+// Primitive AddRoundKey appliquée à un state
 function addRoundKey(state, roundKey) {
     return divideInBlocks(binaryXOR(state.join(''), roundKey), 8);
 }
 
+// Fonction de développement
 function toHex(binary) {
     return divideInBlocks(binary, 8).map(b => parseInt(b, 2).toString(16)).join(' ');
 }
 
+// Fonction de développement
 function printHexMatrix(state) {
     for (let i = 0; i < 4; i++) {
         console.log(toHex(`${state[i]}${state[4 + i]}${state[8 + i]}${state[12 + i]}`));
     }
 }
 
+// Chiffrement AES
 export function aes(text, key, type) {
     const binaryKey = stringToBinary(key);
-    //const binaryKey = '00001111000101010111000111001001010001111101100111101000010110010000110010110111101011011101011010101111011111110110011110011000';
     if (binaryKey.length != 128) {
         return {
             type: 'error',
@@ -319,17 +331,9 @@ export function aes(text, key, type) {
         if (type == 'uncrypt') {
             state = addRoundKey(state, dividedKey[10]);
             for (let i = 9; i >= 0; i--) {
-                //console.log('Round '+i);
-                //printHexMatrix(state);
                 state = invShiftRows(state);
-                //console.log('After InvShiftRows');
-                //printHexMatrix(state);
                 state = invSubBytes(state);
-                //console.log('After InvSubBytes');
-                //printHexMatrix(state);
                 state = addRoundKey(state, dividedKey[i]);
-                //console.log('After addRoundKey');
-                //printHexMatrix(state);
                 if (i > 0) {
                     state = mixColumns(state, invM);
                 }
@@ -354,6 +358,3 @@ export function aes(text, key, type) {
         data: binaryToString(modifiedBlocks.join(''))
     };
 }
-
-console.log(aes(aes('Sbcdabcdabcdabcd', '0123012301230123', 'crypt').data, '0123012301230123', 'uncrypt'));
-
