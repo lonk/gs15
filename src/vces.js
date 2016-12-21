@@ -24,7 +24,7 @@ function crypt(blocks, desKeys1, desKeys2, aesKeys) {
     const aesBlock = aes.addRoundKey(
         aes.mixColumns(
             aes.shiftRows(
-                aes.mixColumns(desBlock)
+                aes.subBytes(desBlock)
             )
         ), aesKeys[step]).join('');
 
