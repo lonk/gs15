@@ -41,7 +41,7 @@ inquirer.prompt([
 ]).then(answers => {
     switch(answers.algo) {
         case 1:
-            console.log(vces());
+            console.log(vces('Test', '0123012301230123', crypt));
             break;
         default:
             console.log('Algorithme indisponible');

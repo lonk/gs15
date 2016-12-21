@@ -142,19 +142,20 @@ function feistelFunction(R, key) {
     return permute(generated, P);
 }
 
-// Récursions sur les tournées de feistel
-function feistel(L, R, K) {
+// Récursions sur les tournées de feistel (16 max)
+export function feistel(L, R, K, nbRounds) {
     const step = L.length;
 
     L[step] = R[step - 1];
 
     const tempR = feistelFunction(R[step - 1], K[step - 1]);
-    R[step] = binaryXOR(L[step - 1], tempR);
+    R[step]     = binaryXOR(L[step - 1], tempR);
 
-    if (step < 16) {
-        return feistel(L, R, K);
+    if (step < nbRounds) {
+        return feistel(L, R, K, nbRounds);
     }
-    return [L, R];
+
+    return R[nbRounds] + L[nbRounds];
 }
 
 // Génération des 16 clés
@@ -180,6 +181,14 @@ function generateKeys(keys28, keys) {
     return keys;
 }
 
+// Génération des 16 clés à partir de la clé binaire
+export function subKeysFromKey(key) {
+    const key56  = permute(key, PC1);
+    const keys28 = [ divideInBlocks(key56, 28) ];
+
+    return generateKeys(keys28, []);
+}
+
 // Chiffrement DES
 export function des(text, key, type) {
     const binaryKey = stringToBinary(key);
@@ -191,28 +200,25 @@ export function des(text, key, type) {
         };
     }
 
-    const initialBinary = stringToBinary(text);
-    const blocks        = divideInBlocks(initialBinary, 64);
-
     // Génération des 16 clés Ki
-    const key56  = permute(binaryKey, PC1);
-    const keys28 = [ divideInBlocks(key56, 28) ];
-    let keys     = generateKeys(keys28, []);
+    let keys = subKeysFromKey(binaryKey);
 
     if (type == 'uncrypt') {
        keys = keys.reverse();
     }
+
+    const initialBinary = stringToBinary(text);
+    const blocks        = divideInBlocks(initialBinary, 64);
 
     const modifiedBlocks = blocks.map(block => {
         const permutedBinary = permute(block, IP);
         const dividedBlock   = divideInBlocks(permutedBinary, 32);
 
         // 16 tournées de Feistel
-        const L = [ dividedBlock[0] ];
-        const R = [ dividedBlock[1] ];
+        const L = dividedBlock[0];
+        const R = dividedBlock[1];
 
-        const finalBlocks = feistel(L, R, keys);
-        const finalBlock  = finalBlocks[1][16] + finalBlocks[0][16];
+        const finalBlock  = feistel(L, R, keys, 16);
         const result      = permute(finalBlock, FP);
         return result;
     });

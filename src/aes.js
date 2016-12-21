@@ -192,12 +192,12 @@ function invSubByte(vector) {
 }
 
 // Primitive SubBytes appliquée à un state
-function subBytes(state) {
+export function subBytes(state) {
     return state.map(byte => subByte(byte));
 }
 
 // Primitive InvSubBytes appliquée à un state
-function invSubBytes(state) {
+export function invSubBytes(state) {
     return state.map(byte => invSubByte(byte));
 }
 
@@ -214,7 +214,7 @@ function leftShiftArray(input, n) {
 }
 
 // Primitive ShiftRows appliquée à un state
-function shiftRows(state) {
+export function shiftRows(state) {
     let stateCopy = [];
     for (let i = 0; i < state.length; i++) {
         let step = Math.floor(i / 4);
@@ -226,7 +226,7 @@ function shiftRows(state) {
 }
 
 // Primitive InvShiftRows appliquée à un state
-function invShiftRows(state) {
+export function invShiftRows(state) {
     let stateCopy = [];
 
     for (let i = state.length - 1; i >= 0; i--) {
@@ -254,18 +254,28 @@ function mixColumn(column, M) {
     return result;
 }
 
-// Primitive MixColumn appliquée à une state
-function mixColumns(state, M) {
-    const a = mixColumn(state.slice(0, 4), M);
-    const b = mixColumn(state.slice(4, 8), M);
-    const c = mixColumn(state.slice(8, 12), M);
-    const d = mixColumn(state.slice(12, 16), M);
+// Primitive MixColumn appliquée à un state
+export function mixColumns(state) {
+    const a = mixColumn(state.slice(0, 4), cryM);
+    const b = mixColumn(state.slice(4, 8), cryM);
+    const c = mixColumn(state.slice(8, 12), cryM);
+    const d = mixColumn(state.slice(12, 16), cryM);
 
     return a.concat(b, c, d);
 }
 
-// Algorithme d'extension de la clé
-function keyExpansion(key) {
+// Primitive InvMixColumn appliquée à une state
+export function invMixColumns(state) {
+    const a = mixColumn(state.slice(0, 4), invM);
+    const b = mixColumn(state.slice(4, 8), invM);
+    const c = mixColumn(state.slice(8, 12), invM);
+    const d = mixColumn(state.slice(12, 16), invM);
+
+    return a.concat(b, c, d);
+}
+
+// Algorithme de génération des sous clés
+export function keyExpansion(key) {
     let keyArray    = divideInBlocks(key, 32);
     let extendedKey = keyArray;
     let i           = 1;
@@ -289,11 +299,11 @@ function keyExpansion(key) {
         }
     }
 
-    return extendedKey.join('');
+    return divideInBlocks(extendedKey.join(''), 128);
 }
 
 // Primitive AddRoundKey appliquée à un state
-function addRoundKey(state, roundKey) {
+export function addRoundKey(state, roundKey) {
     return divideInBlocks(binaryXOR(state.join(''), roundKey), 8);
 }
 
@@ -322,8 +332,7 @@ export function aes(text, key, type) {
     const initialBinary = stringToBinary(text);
     const blocks        = divideInBlocks(initialBinary, 128);
 
-    const extendedKey   = keyExpansion(binaryKey);
-    const dividedKey    = divideInBlocks(extendedKey, 128);
+    const dividedKey   = keyExpansion(binaryKey);
 
     const modifiedBlocks = blocks.map(block => {
         let state = divideInBlocks(block, 8);
@@ -335,7 +344,7 @@ export function aes(text, key, type) {
                 state = invSubBytes(state);
                 state = addRoundKey(state, dividedKey[i]);
                 if (i > 0) {
-                    state = mixColumns(state, invM);
+                    state = invMixColumns(state);
                 }
             }
         } else {
@@ -344,7 +353,7 @@ export function aes(text, key, type) {
                 state = subBytes(state);
                 state = shiftRows(state);
                 if (i < 10) {
-                    state = mixColumns(state, cryM);
+                    state = mixColumns(state);
                 }
                 state = addRoundKey(state, dividedKey[i]);
             }
