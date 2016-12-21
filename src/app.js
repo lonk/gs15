@@ -14,7 +14,7 @@ inquirer.prompt([
             },
             {
                 key     : 2,
-                name    : 'Chiffrement RSA avec module multiple',
+                name    : 'Déchiffrement VCES',
                 disabled: 'Indisponible pour le moment',
                 value   : 2
             },
@@ -26,22 +26,47 @@ inquirer.prompt([
             },
             {
                 key     : 4,
-                name    : 'Déchiffrement RSA',
+                name    : 'Chiffrement RSA avec module multiple',
                 disabled: 'Indisponible pour le moment',
                 value   : 4
             },
             {
                 key     : 5,
-                name    : 'Vérifier une signature RSA',
+                name    : 'Déchiffrement RSA',
                 disabled: 'Indisponible pour le moment',
                 value   : 5
+            },
+            {
+                key     : 6,
+                name    : 'Vérifier une signature RSA',
+                disabled: 'Indisponible pour le moment',
+                value   : 6
             }
         ]
     }
 ]).then(answers => {
     switch(answers.algo) {
         case 1:
-            console.log(vces('Test', '0123012301230123', crypt));
+            inquirer.prompt([
+                {
+                    type   : 'input',
+                    name   : 'text',
+                    message: 'Entrez le texte à chiffrer'
+                },
+                {
+                    type   : 'input',
+                    name   : 'key',
+                    message: 'Entrez la clé de chiffrement'
+                }
+            ]).then(data => {
+                const result = vces(data.text, data.key, 'crypt');
+                if (result.type == 'error') {
+                    console.log(`Erreur: ${result.data}`);
+                    return;
+                }
+
+                console.log(`Le résultat chiffré est: ${JSON.stringify(result.data)}`);
+            });
             break;
         default:
             console.log('Algorithme indisponible');
