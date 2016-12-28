@@ -7,7 +7,8 @@
     "start": "babel src --presets es2015 --out-dir build && node build/app.js",
     "des": "babel src --presets es2015 --out-dir build && node build/des.js",
     "aes": "babel src --presets es2015 --out-dir build && node build/aes.js",
-    "vces": "babel src --presets es2015 --out-dir build && node build/vces.js"
+    "vces": "babel src --presets es2015 --out-dir build && node build/vces.js",
+    "rsa": "babel src --presets es2015 --out-dir build && node build/rsa.js"
   },
   "dependencies": {
     "big-integer": "^1.6.16",
