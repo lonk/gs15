@@ -54,3 +54,20 @@ function keysGenerator() {
         }
     };
 }
+
+function crypt(char, key) {
+    return char.modPow(key.e, key.n);
+}
+
+export function rsa(text, key) {
+    const asciiText = text.split('').map(c => bigInt(c.charCodeAt(0)));
+
+    const cryptedText = asciiText.map(c => crypt(c, key).toString());
+
+    return {
+        type: 'result',
+        data: cryptedText
+    };
+}
+
+console.log(rsa('Test GS15 !', keysGenerator().public));
