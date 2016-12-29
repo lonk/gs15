@@ -42,15 +42,15 @@ function keysGenerator() {
 
     return {
         public: {
-            e: e.toString(),
-            n: n.toString()
+            e,
+            n
         },
         private: {
-            p   : p.toString(),
-            q   : q.toString(),
-            dp  : dp.toString(),
-            dq  : dq.toString(),
-            qinv: qinv.toString()
+            p,
+            q,
+            dp,
+            dq,
+            qinv
         }
     };
 }
@@ -59,15 +59,34 @@ function crypt(char, key) {
     return char.modPow(key.e, key.n);
 }
 
-export function rsa(text, key) {
-    const asciiText = text.split('').map(c => bigInt(c.charCodeAt(0)));
+function uncrypt(char, key) {
+    const mp = char.modPow(key.dp, key.p);
+    const mq = char.modPow(key.dq, key.q);
 
-    const cryptedText = asciiText.map(c => crypt(c, key).toString());
+    const m2 = (mp.minus(mq)).multiply(key.q);
 
-    return {
-        type: 'result',
-        data: cryptedText
-    };
+    const m = m2.multiply(key.qinv).plus(mq);
+
+    return m;
 }
 
-console.log(rsa('Test GS15 !', keysGenerator().public));
+export function rsa(text, key, type) {
+    let result;
+
+    if (type == 'uncrypt') {
+        const asciiText = text.split(' ').map(c => uncrypt(bigInt(c), key));
+
+        result = asciiText.map(c => String.fromCharCode(c)).join('');
+    } else {
+        const asciiText = text.split('').map(c => bigInt(c.charCodeAt(0)));
+
+        const cryptedText = asciiText.map(c => crypt(c, key).toString());
+
+        result = cryptedText.join(' ');
+    }
+
+        return {
+            type: 'result',
+            data: result
+        };
+}
