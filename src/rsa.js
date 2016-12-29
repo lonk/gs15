@@ -16,10 +16,7 @@ function largePrimeGenerator() {
 
 function eGenerator(p, q, phin) {
     let e = null;
-    let i = p.plus(1);
-    if (q.gt(p)) {
-        i = q.plus(1);
-    }
+    let i = bigInt(3);
 
     while (!e && i.lt(phin)) {
         if (bigInt.gcd(i, phin).eq(1)) {
