@@ -85,8 +85,8 @@ export function rsa(text, key, type) {
         result = cryptedText.join(' ');
     }
 
-        return {
-            type: 'result',
-            data: result
-        };
+    return {
+        type: 'result',
+        data: result
+    };
 }
