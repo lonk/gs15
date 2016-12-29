@@ -29,7 +29,7 @@ function eGenerator(p, q, phin) {
     return e;
 }
 
-function keysGenerator() {
+export function keysGenerator() {
     const p    = largePrimeGenerator();
     const q    = largePrimeGenerator();
     const n    = p.multiply(q);
@@ -42,15 +42,15 @@ function keysGenerator() {
 
     return {
         public: {
-            e,
-            n
+            e: e.toString(),
+            n: n.toString()
         },
         private: {
-            p,
-            q,
-            dp,
-            dq,
-            qinv
+            p   : p.toString(),
+            q   : q.toString(),
+            dp  : dp.toString(),
+            dq  : dq.toString(),
+            qinv: qinv.toString()
         }
     };
 }

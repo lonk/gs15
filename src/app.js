@@ -1,10 +1,18 @@
+import fs       from 'fs';
 import inquirer from 'inquirer';
 import { vces } from './vces';
 import { des }  from './des';
 import { aes }  from './aes';
+import { rsa, keysGenerator } from './rsa';
 
 let lastResult;
 let lastKey;
+
+function writeInFile(file, data) {
+    fs.writeFile(file, data, (err) => {
+        if (err) throw err;
+    });
+}
 
 function ask() {
     inquirer.prompt([
@@ -24,10 +32,9 @@ function ask() {
                     value: 2
                 },
                 {
-                    key     : 3,
-                    name    : 'Chiffrement RSA avec module multiple',
-                    disabled: 'Indisponible pour le moment',
-                    value   : 3
+                    key  : 3,
+                    name : 'Génération des clés publiques et privées RSA',
+                    value: 3
                 },
                 {
                     key     : 4,
@@ -43,29 +50,35 @@ function ask() {
                 },
                 {
                     key     : 6,
-                    name    : 'Vérifier une signature RSA',
+                    name    : 'Signature RSA avec module multiple',
                     disabled: 'Indisponible pour le moment',
                     value   : 6
                 },
                 {
-                    key  : 7,
-                    name : 'Chiffrement symétrique DES',
-                    value: 7
+                    key     : 7,
+                    name    : 'Vérifier une signature RSA',
+                    disabled: 'Indisponible pour le moment',
+                    value   : 7
                 },
                 {
                     key  : 8,
-                    name : 'Déchiffrement DES',
+                    name : 'Chiffrement symétrique DES',
                     value: 8
                 },
                 {
                     key  : 9,
-                    name : 'Chiffrement symétrique AES',
+                    name : 'Déchiffrement DES',
                     value: 9
                 },
                 {
                     key  : 10,
-                    name : 'Déchiffrement AES',
+                    name : 'Chiffrement symétrique AES',
                     value: 10
+                },
+                {
+                    key  : 11,
+                    name : 'Déchiffrement AES',
+                    value: 11
                 }
             ]
         }
@@ -82,25 +95,44 @@ function ask() {
                 algo = vces;
                 type = 'uncrypt';
                 break;
-            case 7:
+            case 8:
                 algo = des;
                 type = 'crypt';
                 break;
-            case 8:
+            case 9:
                 algo = des;
                 type = 'uncrypt';
                 break;
-            case 9:
+            case 10:
                 algo = aes;
                 type = 'crypt';
                 break;
-            case 10:
+            case 11:
                 algo = aes;
                 type = 'uncrypt';
                 break;
         }
 
-        if ([1, 2, 7, 8, 9, 10].indexOf(answers.algo) !== -1) {
+        if (answers.algo == 3) {
+            inquirer.prompt([
+                {
+                    type   : 'input',
+                    name   : 'alias',
+                    message: 'Entrez l\'alias à utiliser pour enregistrer les clés'
+                }
+            ]).then(data => {
+                const keys = keysGenerator();
+
+                writeInFile(`${data.alias}.public`, JSON.stringify(keys.public));
+                writeInFile(`${data.alias}.private`, JSON.stringify(keys.private));
+
+                console.log(`Les clés ont bien été enregistrées sous l'alias ${data.alias}`);
+
+                setTimeout(ask, 1000);
+            });
+        }
+
+        if ([1, 2, 8, 9, 10, 11].indexOf(answers.algo) !== -1) {
             inquirer.prompt([
                 {
                     type   : 'input',
