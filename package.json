@@ -7,6 +7,7 @@
     "start": "babel src --presets es2015 --out-dir build && node build/app.js",
     "des": "babel src --presets es2015 --out-dir build && node build/des.js",
     "aes": "babel src --presets es2015 --out-dir build && node build/aes.js",
+    "md5": "babel src --presets es2015 --out-dir build && node build/md5.js",
     "vces": "babel src --presets es2015 --out-dir build && node build/vces.js",
     "rsa": "babel src --presets es2015 --out-dir build && node build/rsa.js"
   },
