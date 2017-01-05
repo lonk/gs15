@@ -46,6 +46,8 @@ export function keysGenerator() {
             n: n.toString()
         },
         private: {
+            n   : n.toString(),
+            d   : d.toString(),
             p   : p.toString(),
             q   : q.toString(),
             dp  : dp.toString(),
@@ -57,6 +59,10 @@ export function keysGenerator() {
 
 function crypt(char, key) {
     return char.modPow(key.e, key.n);
+}
+
+function simpleUncrypt(char, key) {
+    return char.modPow(key.d, key.n);
 }
 
 function uncrypt(char, key) {
@@ -73,7 +79,17 @@ function uncrypt(char, key) {
 export function rsa(text, key, type) {
     let result;
 
-    if (type == 'uncrypt') {
+    if (type == 'sign') {
+        const asciiText = text.split('').map(c => bigInt(c.charCodeAt(0)));
+
+        const cryptedText = asciiText.map(c => simpleUncrypt(c, key).toString());
+
+        result = cryptedText.join(' ');
+    } else if (type == 'unsign') {
+        const asciiText = text.split(' ').map(c => crypt(bigInt(c), key));
+
+        result = asciiText.map(c => String.fromCharCode(c)).join('');
+    } else if (type == 'uncrypt') {
         const asciiText = text.split(' ').map(c => uncrypt(bigInt(c), key));
 
         result = asciiText.map(c => String.fromCharCode(c)).join('');

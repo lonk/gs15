@@ -3,7 +3,9 @@ import inquirer from 'inquirer';
 import { vces } from './vces';
 import { des }  from './des';
 import { aes }  from './aes';
+import { md5 }  from './md5';
 import { rsa, keysGenerator } from './rsa';
+import { divideInBlocks } from './utils';
 
 let lastResult;
 let lastKey;
@@ -47,16 +49,14 @@ function ask() {
                     value: 5
                 },
                 {
-                    key     : 6,
-                    name    : 'Signature RSA avec module multiple',
-                    disabled: 'Indisponible pour le moment',
-                    value   : 6
+                    key  : 6,
+                    name : 'Signature RSA',
+                    value: 6
                 },
                 {
-                    key     : 7,
-                    name    : 'Vérifier une signature RSA',
-                    disabled: 'Indisponible pour le moment',
-                    value   : 7
+                    key  : 7,
+                    name : 'Vérifier une signature RSA',
+                    value: 7
                 },
                 {
                     key  : 8,
@@ -170,6 +170,92 @@ function ask() {
 
                     lastResult = result.data;
                     console.log(`Le résultat ${(type == 'uncrypt' ? 'dé' : '')}chiffré est: ${JSON.stringify(result.data)}`);
+
+                    setTimeout(ask, 1000);
+                });
+            });
+        }
+
+        if (answers.algo == 6) {
+            inquirer.prompt([
+                {
+                    type   : 'input',
+                    name   : 'text',
+                    message: `Entrez le message à signer (défaut: ${lastResult})`
+                },
+                {
+                    type   : 'input',
+                    name   : 'alias',
+                    message: 'Entrez l\'alias à utiliser pour lire les clés'
+                }
+            ]).then(data => {
+                const file = `${data.alias}.private`;
+
+                if (!data.text) {
+                    data.text = lastResult;
+                }
+
+                const hash = md5(data.text);
+                console.log(`Hash: ${hash.data}`);
+
+                fs.readFile(file, (err, keyFile) => {
+                    if (err) throw err;
+
+                    const key = JSON.parse(keyFile);
+
+                    const signature = rsa(hash.data, key, 'sign');
+                    if (signature.type == 'error') {
+                        console.log(`Erreur: ${signature.data}`);
+                        return ask();
+                    }
+
+                    lastResult = signature.data;
+                    console.log(`La signature est: ${JSON.stringify(signature.data)}`);
+
+                    setTimeout(ask, 1000);
+                });
+            });
+        }
+
+        if (answers.algo == 7) {
+            inquirer.prompt([
+                {
+                    type   : 'input',
+                    name   : 'check',
+                    message: 'Entrez le texte à vérifier'
+                },
+                {
+                    type   : 'input',
+                    name   : 'text',
+                    message: `Entrez la signature du texte à vérifier (défaut: ${lastResult})`
+                },
+                {
+                    type   : 'input',
+                    name   : 'alias',
+                    message: 'Entrez l\'alias à utiliser pour lire les clés'
+                }
+            ]).then(data => {
+                const file = `${data.alias}.public`;
+
+                if (!data.text) {
+                    data.text = lastResult;
+                }
+
+                fs.readFile(file, (err, keyFile) => {
+                    if (err) throw err;
+
+                    const key = JSON.parse(keyFile);
+                    const hash = rsa(data.text, key, 'unsign');
+                    if (hash.type == 'error') {
+                        console.log(`Erreur: ${hash.data}`);
+                        return ask();
+                    }
+
+                    if (hash.data == md5(data.check).data) {
+                        console.log('Le message est authentique');
+                    } else {
+                        console.log('Le message n\'est pas authentique');
+                    }
 
                     setTimeout(ask, 1000);
                 });
