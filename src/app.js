@@ -10,12 +10,14 @@ import { divideInBlocks } from './utils';
 let lastResult;
 let lastKey;
 
+// Fonction permettant de lire tout le contenu d'un fichier
 function writeInFile(file, data) {
     fs.writeFile(file, data, (err) => {
         if (err) throw err;
     });
 }
 
+// Fonction principale, appelée après chaque action
 function ask() {
     inquirer.prompt([
         {
@@ -84,6 +86,7 @@ function ask() {
         let algo;
         let type;
 
+        // En fonction de l'algorithme choisi, on modifie la façon de se comporter de l'algorithme
         switch(answers.algo) {
             case 1:
                 algo = vces;

@@ -14,6 +14,7 @@ function largePrimeGenerator() {
     return largePrimeGenerator();
 }
 
+// Génération d'un e compatible avec p, q et phi(n)
 function eGenerator(p, q, phin) {
     let e = null;
     let i = bigInt(3);
@@ -29,6 +30,7 @@ function eGenerator(p, q, phin) {
     return e;
 }
 
+// Génération des clés selon les règles de RSA
 export function keysGenerator() {
     const p    = largePrimeGenerator();
     const q    = largePrimeGenerator();
@@ -57,14 +59,17 @@ export function keysGenerator() {
     };
 }
 
+// Chiffrement RSA avec le padding PCKS#1
 function crypt(char, key) {
     return char.modPow(key.e, key.n);
 }
 
+// Déchifffrement RSA simple
 function simpleUncrypt(char, key) {
     return char.modPow(key.d, key.n);
 }
 
+// Déchifffrement RSA avec le padding PCKS#1
 function uncrypt(char, key) {
     const mp = char.modPow(key.dp, key.p);
     const mq = char.modPow(key.dq, key.q);
@@ -76,6 +81,7 @@ function uncrypt(char, key) {
     return m;
 }
 
+// Chiffrement RSA
 export function rsa(text, key, type) {
     let result;
 
