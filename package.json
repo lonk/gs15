@@ -1,7 +1,10 @@
 {
   "name": "gs15",
   "description": "GS15 project",
-  "author": "Lucas Soulier <lucas.soulier@utt.fr>",
+  "authors": [
+    "Lucas Soulier <lucas.soulier@utt.fr>",
+    "Léo Leblond <leo.leblond@utt.fr>"
+  ],
   "private": true,
   "scripts": {
     "start": "babel src --presets es2015 --out-dir build && node build/app.js",
